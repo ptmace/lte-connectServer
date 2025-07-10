@@ -153,7 +153,11 @@
 #define MCU_SIM_EN_PIN              15
 
 // Please update number before test
-#define PHONE_NUMBER                "+8498*****"
+#define PHONE_NUMBER                "+84"
+
+String endpoint = "a32smiaqrae69e-ats.iot.ap-southeast-1.amazonaws.com";  // <-- đổi thành của bạn
+String topic = "esp32/data";                                          // <-- topic MQTT
+String payload = "{\"device\":\"esp32\",\"temp\":26.5}";              // <-- dữ liệu JSON
 
 void sim_at_wait()
 {
@@ -200,6 +204,43 @@ void call()
     sim_at_cmd("ATH"); 
 }
 
+void power_on_module() {
+  pinMode(SIM_PWR, OUTPUT);
+  digitalWrite(SIM_PWR, LOW);   // Bật nguồn (tùy mạch bạn có thể cần HIGH)
+  delay(2000);                  // Giữ mức thấp đủ lâu
+  digitalWrite(SIM_PWR, HIGH);  // Trở lại HIGH
+  delay(10000);                 // Đợi module khởi động
+}
+
+void connectToAWS() {
+  Serial.println("🔌 Bắt đầu kết nối AWS MQTT...");
+
+  sim_at_cmd("AT+CMQTTSTART");
+  delay(2000);
+
+  sim_at_cmd("AT+CMQTTACCQ=0,\"esp32_client\"");
+  delay(2000);
+
+  // Cấu hình chứng chỉ: ID 0 = TLS profile, dùng CA, CLIENT, KEY đã upload
+  sim_at_cmd("AT+CMQTTSSLCFG=0,1,\"CA\",\"CLIENT\",\"KEY\"");
+  delay(2000);
+
+  // Kết nối MQTT TLS đến AWS
+  String connectCmd = "AT+CMQTTCONNECT=0,\"ssl://" + endpoint + ":8883\",60,1";
+  sim_at_cmd(connectCmd);
+}
+
+void publishToAWS() {
+  String pubCmd = "AT+CMQTTPUB=0,\"" + topic + "\",1," + String(payload.length());
+  sim_at_cmd(pubCmd);
+  delay(300);
+
+  Serial.println(">> Gửi dữ liệu JSON...");
+  simSerial.print(payload);
+  simSerial.write(0x1A);  // Ký tự kết thúc dữ liệu
+  sim_at_wait();
+}
+
 void setup() 
 {
     /*  Power enable  */
@@ -228,15 +269,23 @@ void setup()
 
     sim_at_cmd("AT+CIMI");
 
+    sim_at_cmd("AT+CGREG?");
+
+
     pinMode(2,OUTPUT); 
     digitalWrite(2,HIGH);
-
-    sent_sms();
+    
+    // sent_sms();   
+    // call();
+    simSerial.println("AT+CGATT?");
 
     // Delay 5s
-    delay(5000);   
-
-    call();
+    delay(5000);
+    connectToAWS();
+    delay(1000);
+    Serial.println("✅ Kết nối AWS MQTT thành công!");
+    publishToAWS();
+    Serial.println("✅ Dữ liệu JSON đã được gửi thành công!");
 }
 
 void loop() 

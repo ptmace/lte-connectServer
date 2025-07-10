@@ -7,10 +7,11 @@
 #include <MPU6050.h>
 #include <Wire.h>
 
-#define SCL_PIN 25
-#define SDA_PIN 26
+// #define SCL_PIN 25
+// #define SDA_PIN 26
 #define MODEM_RX 16
 #define MODEM_TX 17
+#define SIM_PWR 15
 
 // extern MPU6050 mpu; // Create an instance of the MPU6050 class
 
