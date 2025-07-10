@@ -153,7 +153,7 @@
 #define MCU_SIM_EN_PIN              15
 
 // Please update number before test
-#define PHONE_NUMBER                "+8498*****"
+#define PHONE_NUMBER                "+84349305014"
 
 void sim_at_wait()
 {
@@ -223,10 +223,22 @@ void setup()
     // Check SIM Slot
     sim_at_cmd("AT+CPIN?");
 
+    // Check SMS Center Address
+    sim_at_cmd("AT+CSCA?"); 
+
+    // Check Network Registration
+    sim_at_cmd("AT+CREG?"); 
+
     // Check Signal Quality
     sim_at_cmd("AT+CSQ");
 
-    sim_at_cmd("AT+CIMI");
+    sim_at_cmd("AT+CIMI"); 
+
+    sim_at_cmd("AT+CGDCONT=1,\"IP\",\"v-internet\""); // Set APN for Viettel
+
+    sim_at_cmd("AT+CGACT=1,1"); // Activate PDP context
+
+    sim_at_cmd("AT+CGPADDR=1"); // Get IP Address
 
     pinMode(2,OUTPUT); 
     digitalWrite(2,HIGH);
