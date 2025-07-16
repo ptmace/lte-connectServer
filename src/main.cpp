@@ -234,11 +234,38 @@ void setup()
 
     sim_at_cmd("AT+CIMI"); 
 
-    sim_at_cmd("AT+CGDCONT=1,\"IP\",\"v-internet\""); // Set APN for Viettel
+    sim_at_cmd("AT+CGDCONT=1,\"IP\",\"m-wap\""); // Set APN (Viettel: v-internet, Mobifone: m-wap) 
 
     sim_at_cmd("AT+CGACT=1,1"); // Activate PDP context
 
     sim_at_cmd("AT+CGPADDR=1"); // Get IP Address
+
+
+//   
+    //sim_at_cmd("AT+CMQTTSSLCFG?"); // Check MQTT SSL configuration
+
+    //sim_at_cmd("AT+CFSGFLS"); // Check upload files
+
+    //sim_at_cmd("AT+CMQTTSSLCFG=0,1,\"AmazonRootCA1.pem\",\"device-cert.pem\",\"private-key.pem\"");
+    
+    sim_at_cmd("AT+NETOPEN");
+
+    sim_at_cmd("AT+NETSTATUS");
+    
+    sim_at_cmd("AT+CMQTTSTART");
+    sim_at_cmd("AT+CMQTTACCQ=0,\"testlte\"");
+    //sim_at_cmd("AT+CMQTTCONNECT=0,\"ssl://ah5lyhi48b5xm-ats.iot.ap-southeast-1.amazonaws.com:8883\",60,1");
+
+    sim_at_cmd("AT+CMQTTCONNECT=0,\"tcp://vierone.anyengarden.com.vn:1883\",60,1,\"vierone-demo\",\"123456aB@\"");
+
+    sim_at_cmd("AT+CMQTTTOPIC=0,12");  // 12 ký tự của "test/topic"
+    sim_at_cmd("test/topic");
+
+    sim_at_cmd("AT+CMQTTPAYLOAD=0,11"); // 11 ký tự của "Hello World"
+    sim_at_cmd("Hello World");
+
+    sim_at_cmd("AT+CMQTTPUB=0,1,60");  // QoS 1, Retained 0, Timeout 60s
+
 
     pinMode(2,OUTPUT); 
     digitalWrite(2,HIGH);
@@ -246,7 +273,7 @@ void setup()
     sent_sms();
 
     // Delay 5s
-    delay(5000);   
+    delay(500);   
 
     call();
 }
