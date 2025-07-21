@@ -1,17 +1,36 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef __MAIN_H__
+#define __MAIN_H__
 
-#include "Arduino.h"
-#include "serial.h"
-#include "sw_timer.h"
-#include <MPU6050.h>
-#include <Wire.h>
+#define TINY_GSM_MODEM_SIM7600
+#define TINY_GSM_USE_GPRS true
+#define TINY_GSM_USE_PPP true
 
-#define SCL_PIN 25
-#define SDA_PIN 26
-#define MODEM_RX 16
-#define MODEM_TX 17
+#include <Arduino.h>
+#include <TinyGsmClient.h>
+#include <PubSubClient.h>
 
-// extern MPU6050 mpu; // Create an instance of the MPU6050 class
+// Modem Pinout
+#define MODEM_TX    17
+#define MODEM_RX    16
+#define MODEM_PWR   15
+#define MODEM_BAUD  115200
+#define SERIAL_MONITOR      Serial
+#define SERIAL_AT           Serial2
 
-#endif
+// MQTT Broker Config
+#define MQTT_SERVER "vierone.anyengarden.com.vn"
+#define MQTT_PORT   1883
+#define MQTT_USER   "vierone-demo"
+#define MQTT_PASS   "123456aB@"
+#define MQTT_TOPIC  "vierone/node-id/device_update"
+
+// Forward Declaration
+void modemPowerOn();
+void mqttReconnect();
+
+extern HardwareSerial serialAT;
+extern TinyGsm modem;
+extern TinyGsmClient gsmClient;
+extern PubSubClient mqtt;
+
+#endif  // __MAIN_H__
