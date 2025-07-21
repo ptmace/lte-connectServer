@@ -166,7 +166,7 @@
 
 // Topic và Payload
 #define MQTT_TOPIC              "vierone/node-id/device_update"
-#define MQTT_PAYLOAD            "{\"msg\":\"hello test\"}"
+#define MQTT_PAYLOAD            "{\"msg\":\"hi from zybike with luv\"}"
 
 void sim_at_wait() {
     delay(200);
@@ -188,35 +188,29 @@ void sim_at_send_raw(const String &raw) {
 
 void send_mqtt() {
     sim_at_cmd("AT+CMQTTSTART");
-    delay(500);
+
 
     sim_at_cmd("AT+CMQTTACCQ=0,\"test-lte\"");
-    delay(500);
 
     sim_at_cmd("AT+CMQTTCONNECT=0,\"tcp://vierone.anyengarden.com.vn:1883\",60,1,\"vierone-demo\",\"123456aB@\"");
     delay(1000);
 
     // Send Topic
     sim_at_cmd("AT+CMQTTTOPIC=0," + String(strlen(MQTT_TOPIC)));
-    delay(200);
+
     sim_at_send_raw(MQTT_TOPIC);
-    delay(500);
 
     // Send Payload
     sim_at_cmd("AT+CMQTTPAYLOAD=0," + String(strlen(MQTT_PAYLOAD)));
-    delay(200);
+
     sim_at_send_raw(MQTT_PAYLOAD);
-    delay(500);
 
     // Publish QoS 0 (khuyến khích)
     sim_at_cmd("AT+CMQTTPUB=0,0,60");
-    delay(1000);
 
     // Disconnect
     sim_at_cmd("AT+CMQTTDISC=0,60");
-    delay(500);
     sim_at_cmd("AT+CMQTTREL=0");
-    delay(500);
     sim_at_cmd("AT+CMQTTSTOP");
 }
 
@@ -225,7 +219,7 @@ void setup() {
     digitalWrite(MCU_SIM_EN_PIN, LOW);
 
     Serial.begin(115200);
-    Serial.println("\nSystem started!!!!");
+    Serial.println("\n\n-----------------------\nSystem started!!!!");
 
     delay(8000);  // Đợi SIM module khởi động
 
@@ -239,13 +233,13 @@ void setup() {
     sim_at_cmd("AT+CSQ");
     sim_at_cmd("AT+CIMI");
 
-    sim_at_cmd("AT+CGDCONT=1,\"IP\",\"v-internet\"");
+    sim_at_cmd("AT+CGDCONT=1,\"IP\",\"m-wap\"");
     sim_at_cmd("AT+CGACT=1,1");
     sim_at_cmd("AT+CGPADDR=1");
 
-    delay(500);
+    //delay(500);
     sim_at_cmd("AT+NETOPEN");
-    delay(500);
+    //delay(500);
 
     send_mqtt();  // Gửi tin nhắn MQTT
 }
