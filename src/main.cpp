@@ -153,7 +153,7 @@
 #define MCU_SIM_EN_PIN              15
 
 // Please update number before test
-#define PHONE_NUMBER                "+8498*****"
+#define PHONE_NUMBER                "+84"
 
 void sim_at_wait()
 {
@@ -172,6 +172,21 @@ bool sim_at_cmd(String cmd){
 bool sim_at_send(char c){
     simSerial.write(c);
     return true;
+}
+
+
+bool wait_for_prompt(const char* expected, unsigned long timeout = 3000) {
+  unsigned long start = millis();
+  String buffer = "";
+  while (millis() - start < timeout) {
+    while (simSerial.available()) {
+      char c = simSerial.read();
+      buffer += c;
+      Serial.print(c);
+      if (buffer.indexOf(expected) >= 0) return true;
+    }
+  }
+  return false;
 }
 
 void sent_sms()
@@ -231,12 +246,36 @@ void setup()
     pinMode(2,OUTPUT); 
     digitalWrite(2,HIGH);
 
-    sent_sms();
+    // sent_sms();
 
-    // Delay 5s
-    delay(5000);   
+    // // Delay 5s
+    // delay(5000);   
 
-    call();
+    // call();
+
+    // delay(5000); // Delay 5s before next action
+    sim_at_cmd("AT+CGDCONT=1,\"IP\",\"m-wap\"");  // Cấu hình APN
+
+  // Khởi động MQTT
+    sim_at_cmd("AT+CMQTTSTART");
+
+    // Tạo client ID
+    sim_at_cmd("AT+CMQTTACCQ=0,\"esp32client\"");
+  
+    // Kết nối MQTT (host phải dùng tcp://host:port)
+    sim_at_cmd("AT+CMQTTCONNECT=0,\"tcp://vierone.anyengarden.com.vn:1883\",60,1,\"vierone-demo\",\"123456aB@\"");
+    // sim_at_cmd("AT+CMQTTCONNECT=0,\"tcp://broker.emqx.io:1883\",60,0");
+    delay(5000);
+
+    sim_at_cmd("AT+CMQTTTOPIC=0,10");      
+    sim_at_cmd("test/topic");
+
+
+    sim_at_cmd("AT+CMQTTPAYLOAD=0,16");
+    sim_at_cmd("Hello from ESP32");
+
+    sim_at_cmd("AT+CMQTTPUB=0,0,60");   // Publish message
+    
 }
 
 void loop() 
