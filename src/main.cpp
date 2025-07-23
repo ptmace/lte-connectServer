@@ -1,6 +1,6 @@
 #include <main.h>
 #include <HardwareSerial.h>
-
+#include <sw_timer.h>
 
 HardwareSerial serialAT(2);
 TinyGsm modem(serialAT);
@@ -54,44 +54,83 @@ void setup() {
 }
 
 void mqttReconnect() {
+    static SoftwareTimer retryTimer;
+    retryTimer.reset();
+
     while (!mqtt.connected()) {
-        Serial.println("[MQTT] Attempting reconnect...");
-        if (mqtt.connect("test-lte-client", MQTT_USER, MQTT_PASS)) {
-            Serial.println("[MQTT] Connected!");
-            mqtt.publish(MQTT_TOPIC, "{\"msg\":\"hi again from reconnect\"}");
-        } else {
-            Serial.print("[MQTT] Failed, rc=");
-            Serial.print(mqtt.state());
-            Serial.println(" Retry in 5s...");
-            delay(5000);
+        if (retryTimer.isExpired(5000)) {  // Retry every 5s
+            Serial.println("[MQTT] Attempting reconnect...");
+            if (mqtt.connect("test-lte-client", MQTT_USER, MQTT_PASS)) {
+                Serial.println("[MQTT] Connected!");
+                mqtt.publish(MQTT_TOPIC, "{\"msg\":\"hi again from reconnect\"}");
+                return;
+            } else {
+                Serial.print("[MQTT] Failed, rc=");
+                Serial.print(mqtt.state());
+                Serial.println(" Will retry...");
+                retryTimer.reset();  // Reset timer after attempt
+            }
         }
+        mqtt.loop();  // Keep MQTT stack running
+        delay(10);    // Allow watchdog feed
     }
 }
 
+SoftwareTimer sendTimer;
+
 void loop() {
-    if (!modem.isNetworkConnected()) {
-        Serial.println("[Modem] Network lost. Reconnecting...");
-        if (!modem.waitForNetwork(30000L)) {
-            Serial.println("[Modem] Reconnect failed");
-            delay(10000);
-            return;
-        }
-        Serial.println("[Modem] Reconnected to network");
-    }
-
-    if (!modem.isGprsConnected()) {
-        Serial.println("[Modem] GPRS lost. Reconnecting...");
-        if (!modem.gprsConnect("m-wap", "", "")) {
-            Serial.println("[Modem] GPRS reconnect failed");
-            delay(10000);
-            return;
-        }
-        Serial.println("[Modem] GPRS reconnected");
-    }
-
     if (!mqtt.connected()) {
         mqttReconnect();
     }
 
+    if (sendTimer.isExpired(10000)) {  // Every 10 seconds
+        mqtt.publish(MQTT_TOPIC, "{\"msg\":\"send from loop with luv\"}");
+        sendTimer.reset();
+    }
+
     mqtt.loop();
 }
+
+
+// void mqttReconnect() {
+//     while (!mqtt.connected()) {
+//         Serial.println("[MQTT] Attempting reconnect...");
+//         if (mqtt.connect("test-lte-client", MQTT_USER, MQTT_PASS)) {
+//             Serial.println("[MQTT] Connected!");
+//             mqtt.publish(MQTT_TOPIC, "{\"msg\":\"hi again from reconnect\"}");
+//         } else {
+//             Serial.print("[MQTT] Failed, rc=");
+//             Serial.print(mqtt.state());
+//             Serial.println(" Retry in 5s...");
+//             delay(5000);
+//         }
+//     }
+// }
+
+// void loop() {
+//     if (!modem.isNetworkConnected()) {
+//         Serial.println("[Modem] Network lost. Reconnecting...");
+//         if (!modem.waitForNetwork(30000L)) {
+//             Serial.println("[Modem] Reconnect failed");
+//             delay(10000);
+//             return;
+//         }
+//         Serial.println("[Modem] Reconnected to network");
+//     }
+
+//     if (!modem.isGprsConnected()) {
+//         Serial.println("[Modem] GPRS lost. Reconnecting...");
+//         if (!modem.gprsConnect("m-wap", "", "")) {
+//             Serial.println("[Modem] GPRS reconnect failed");
+//             delay(10000);
+//             return;
+//         }
+//         Serial.println("[Modem] GPRS reconnected");
+//     }
+
+//     if (!mqtt.connected()) {
+//         mqttReconnect();
+//     }
+
+//     mqtt.loop();
+// }

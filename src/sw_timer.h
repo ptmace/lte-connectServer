@@ -4,10 +4,23 @@
 
 #include "main.h"
 
-#define TIMEOUT_SEND 1000 // 1 second timeout for sending data
-#define TIMEOUT_SERIAL 500 // 500 ms timeout for serial events
-extern unsigned long lastSendTime;
+// #define TIMEOUT_SEND 1000 // 1 second timeout for sending data
+// #define TIMEOUT_SERIAL 500 // 500 ms timeout for serial events
+// extern unsigned long lastSendTime;
 
-bool isTimerExpired(unsigned long interval);
+// bool isTimerExpired(unsigned long interval);
+
+class SoftwareTimer {
+private:
+    unsigned long lastTime = 0;
+public:
+    void reset() {
+        lastTime = millis();
+    }
+
+    bool isExpired(unsigned long interval) {
+        return (millis() - lastTime) >= interval;
+    }
+};
 
 #endif // SW_TIMER_H
