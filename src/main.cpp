@@ -241,6 +241,25 @@ void setup() {
     sim_at_cmd("AT+NETOPEN");
     //delay(500);
 
+
+    Serial.println("[PING] Ping vierone.anyengarden.com.vn");
+    sim_at_cmd("AT+CDNSGIP=?");
+    sim_at_cmd("AT+CDNSGIP=\"vierone.anyengarden.com.vn\"");
+    sim_at_cmd("AT+CPING=?");
+    //sim_at_cmd("AT+CPING=\"vierone.anyengarden.com.vn\",1,4,64,1000,10000,255");
+    sim_at_cmd("AT+CPINGSTOP=?");
+    delay(500);
+
+    Serial.println("[HTTP] Testing connection to vierone.anyengarden.com.vn");
+    //Bắt đầu HTTP
+    sim_at_cmd("AT+HTTPINIT");
+    sim_at_cmd("AT+HTTPPARA=\"URL\",\"http://vierone.anyengarden.com.vn/\""); 
+    sim_at_cmd("AT+HTTPACTION=0"); // 0 = GET
+    sim_at_cmd("AT+HTTPREAD?");
+    sim_at_cmd("AT+HTTPREAD=0,615");
+    sim_at_cmd("AT+HTTPTERM");
+    delay(500);
+
     send_mqtt();  // Gửi tin nhắn MQTT
 }
 
